@@ -21,8 +21,7 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
         "http://localhost:3001/api/generate-emoji",
         {
           input: {
-            prompt: "A TOK emoji of " + prompt,
-            apply_watermark: false,
+            prompt,
           },
         }
       );
