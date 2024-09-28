@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Heart, Download } from "lucide-react";
@@ -8,56 +9,70 @@ interface EmojiGridProps {
 }
 
 export function EmojiGrid({ emojis }: EmojiGridProps) {
+  const { isSignedIn } = useAuth();
+
+  if (!isSignedIn) {
+    return null; // or return a message asking to sign in
+  }
+
+  const { getToken } = useAuth();
   const [emojiLikes, setEmojiLikes] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
-    fetch('http://localhost:3001/api/emoji-likes')
-      .then(response => {
+    const fetchLikes = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const token = await getToken();
+        const response = await fetch('http://localhost:3001/api/emoji-likes', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch emoji likes');
         }
-        return response.json();
-      })
-      .then(data => {
+        const data = await response.json();
         setEmojiLikes(data);
-        setIsLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error fetching emoji likes:", err);
         setError("Failed to load likes. Please try again later.");
+      } finally {
         setIsLoading(false);
-      });
-  }, []);
+      }
+    };
 
-  const toggleLike = (emoji: string) => {
+    fetchLikes();
+  }, [getToken]);
+
+  const toggleLike = async (emoji: string) => {
     const isLiked = emojiLikes[emoji] && emojiLikes[emoji] > 0;
     const endpoint = isLiked ? '/api/unlike-emoji' : '/api/like-emoji';
     
-    fetch(`http://localhost:3001${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ emojiUrl: emoji }),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to update like');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setEmojiLikes(prev => ({
-          ...prev,
-          [emoji]: data.likes,
-        }));
-      })
-      .catch(err => {
-        console.error("Error updating like:", err);
-        // Optionally, show an error message to the user
+    try {
+      const token = await getToken();
+      const response = await fetch(`http://localhost:3001${endpoint}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ emojiUrl: emoji }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update like');
+      }
+      const data = await response.json();
+      setEmojiLikes(prev => ({
+        ...prev,
+        [emoji]: data.likes,
+      }));
+    } catch (err) {
+      console.error("Error updating like:", err);
+      // Optionally, show an error message to the user
+    }
   };
 
   const handleDownload = (emoji: string) => {

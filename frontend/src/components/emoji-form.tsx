@@ -3,12 +3,19 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 interface EmojiFormProps {
   onEmojiGenerated: (emoji: string) => void;
 }
 
 export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
+  const { isSignedIn } = useAuth();
+
+  if (!isSignedIn) {
+    return null; // or return a message asking to sign in
+  }
+
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
