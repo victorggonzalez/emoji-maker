@@ -4,10 +4,9 @@ import { EmojiGrid } from './components/emoji-grid'
 import './App.css'
 // Generate dummy emojis for testing
 const dummyEmojis = [
-  'https://replicate.delivery/pbxt/IJzVzqNZCdBUxKsLOQdxGxLc5OiTYqnGnZrMZWIiOixdE4CC/out-0.png',
-  'https://replicate.delivery/pbxt/KJ8zVqNZCdBUxKsLOQdxGxLc5OiTYqnGnZrMZWIiOixdE4CC/out-1.png',
-  'https://replicate.delivery/pbxt/LK9zVqNZCdBUxKsLOQdxGxLc5OiTYqnGnZrMZWIiOixdE4CC/out-2.png',
-  'https://replicate.delivery/pbxt/ML0zVqNZCdBUxKsLOQdxGxLc5OiTYqnGnZrMZWIiOixdE4CC/out-3.png',
+  'https://replicate.delivery/pbxt/KjyX44ZrOJ5PDhYeNF9olNY5T1cnOoGofTZWedIvvs3MNBDnA/out-0.png',
+  'https://replicate.delivery/pbxt/ZUeQOuiN390WNyjTuLa6etQER3Nkeefe12msiaNwD1Ju1JY4E/out-0.png',
+  'https://replicate.delivery/pbxt/woI1FBrfvyUZFasQovDeGI8rG0eZ3e02ioemOy4iOKRt1LMcC/out-0.png',
 ]
 
 function App() {
