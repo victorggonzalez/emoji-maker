@@ -60,10 +60,6 @@ export function EmojiGrid({ emojis }: EmojiGridProps) {
       });
   };
 
-  const getTotalLikes = () => {
-    return Object.values(emojiLikes).reduce((sum, count) => sum + count, 0);
-  };
-
   const handleDownload = (emoji: string) => {
     fetch(emoji)
       .then((response) => response.blob())
@@ -86,7 +82,7 @@ export function EmojiGrid({ emojis }: EmojiGridProps) {
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {emojis.map((emoji, index) => (
+        {[...emojis].reverse().map((emoji, index) => (
           <Card key={index} className="relative group">
             <img src={emoji} alt="Generated Emoji" className="w-full h-auto" />
             <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
