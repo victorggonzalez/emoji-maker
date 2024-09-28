@@ -1,59 +1,127 @@
-import { useState } from 'react'
-import { Card } from './ui/card'
-import { Button } from './ui/button'
-import { Heart, Download } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
+import { Heart, Download } from "lucide-react";
 
 interface EmojiGridProps {
-  emojis: string[]
+  emojis: string[];
 }
 
 export function EmojiGrid({ emojis }: EmojiGridProps) {
-  const [likedEmojis, setLikedEmojis] = useState<Set<string>>(new Set())
+  const [emojiLikes, setEmojiLikes] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+    fetch('http://localhost:3001/api/emoji-likes')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch emoji likes');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setEmojiLikes(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching emoji likes:", err);
+        setError("Failed to load likes. Please try again later.");
+        setIsLoading(false);
+      });
+  }, []);
 
   const toggleLike = (emoji: string) => {
-    setLikedEmojis((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(emoji)) {
-        newSet.delete(emoji)
-      } else {
-        newSet.add(emoji)
-      }
-      return newSet
+    const isLiked = emojiLikes[emoji] && emojiLikes[emoji] > 0;
+    const endpoint = isLiked ? '/api/unlike-emoji' : '/api/like-emoji';
+    
+    fetch(`http://localhost:3001${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emojiUrl: emoji }),
     })
-  }
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to update like');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setEmojiLikes(prev => ({
+          ...prev,
+          [emoji]: data.likes,
+        }));
+      })
+      .catch(err => {
+        console.error("Error updating like:", err);
+        // Optionally, show an error message to the user
+      });
+  };
+
+  const getTotalLikes = () => {
+    return Object.values(emojiLikes).reduce((sum, count) => sum + count, 0);
+  };
 
   const handleDownload = (emoji: string) => {
-    // Implement download functionality
-    console.log('Downloading:', emoji)
-  }
+    fetch(emoji)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        // Extract file name from the URL or use a default name
+        const fileName = emoji.split("/").pop() || "emoji.png";
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      })
+      .catch((error) => console.error("Error downloading emoji:", error));
+  };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {emojis.map((emoji, index) => (
-        <Card key={index} className="relative group">
-          <img src={emoji} alt="Generated Emoji" className="w-full h-auto" />
-          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleLike(emoji)}
-            >
-              <Heart
-                className={`h-6 w-6 ${
-                  likedEmojis.has(emoji) ? 'fill-current text-red-500' : ''
-                }`}
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDownload(emoji)}
-            >
-              <Download className="h-6 w-6" />
-            </Button>
-          </div>
-        </Card>
-      ))}
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {emojis.map((emoji, index) => (
+          <Card key={index} className="relative group">
+            <img src={emoji} alt="Generated Emoji" className="w-full h-auto" />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleLike(emoji)}
+                disabled={isLoading}
+              >
+                <Heart
+                  className={`h-6 w-6 ${
+                    emojiLikes[emoji] && emojiLikes[emoji] > 0 ? "fill-current text-red-500" : ""
+                  }`}
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDownload(emoji)}
+              >
+                <Download className="h-6 w-6" />
+              </Button>
+            </div>
+            <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">
+              {isLoading ? (
+                "Loading likes..."
+              ) : error ? (
+                "Error loading likes"
+              ) : (
+                `Likes: ${emojiLikes[emoji] || 0}`
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
-  )
+  );
 }
