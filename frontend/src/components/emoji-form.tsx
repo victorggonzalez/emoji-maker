@@ -10,11 +10,7 @@ interface EmojiFormProps {
 }
 
 export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
-  const { isSignedIn } = useAuth();
-
-  if (!isSignedIn) {
-    return null; // or return a message asking to sign in
-  }
+  const { getToken } = useAuth();
 
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +20,17 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
     setIsLoading(true);
 
     try {
+      const token = await getToken();
       const response = await axios.post(
         "http://localhost:3001/api/generate-emoji",
         {
           input: {
             prompt,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
         }
       );

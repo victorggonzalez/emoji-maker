@@ -10,11 +10,7 @@ interface EmojiGridProps {
 
 export function EmojiGrid({ emojis }: EmojiGridProps) {
   const { isSignedIn } = useAuth();
-
-  if (!isSignedIn) {
-    return null; // or return a message asking to sign in
-  }
-
+  
   const { getToken } = useAuth();
   const [emojiLikes, setEmojiLikes] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +89,10 @@ export function EmojiGrid({ emojis }: EmojiGridProps) {
       })
       .catch((error) => console.error("Error downloading emoji:", error));
   };
+
+  if (!isSignedIn) {
+    return null; // or return a message asking to sign in
+  }
 
   return (
     <div>
