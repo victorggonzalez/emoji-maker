@@ -236,6 +236,23 @@ app.get("/api/emoji-likes", (req, res) => {
   res.json(emojiLikes);
 });
 
+// Add this new endpoint to fetch all emojis
+app.get("/api/emojis", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("emojis")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching emojis:", error);
+    res.status(500).json({ error: "An error occurred while fetching emojis" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
 });

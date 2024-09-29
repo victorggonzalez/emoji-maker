@@ -6,7 +6,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 
 interface EmojiFormProps {
-  onEmojiGenerated: (emoji: string, emojiData: any) => void;
+  onEmojiGenerated: () => void;
 }
 
 export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
@@ -21,7 +21,7 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
 
     try {
       const token = await getToken();
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:3001/api/generate-emoji",
         {
           input: {
@@ -34,7 +34,8 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
           },
         }
       );
-      onEmojiGenerated(response.data.output, response.data.emojiData);
+      onEmojiGenerated(); // Call this function after successful generation
+      setPrompt(""); // Clear the input after successful generation
     } catch (error) {
       console.error("Error generating emoji:", error);
     } finally {
