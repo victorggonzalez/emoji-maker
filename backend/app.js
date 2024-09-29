@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch");
+
 const { createClient } = require("@supabase/supabase-js");
 const axios = require("axios");
 
@@ -121,6 +121,52 @@ app.use(authRoutes, handleAuth);
 // Use the simple auth middleware for protected routes
 app.use("/api", requireAuth);
 
+// New helper function for uploading emoji to Supabase
+async function uploadEmojiToSupabase(imageUrl, prompt, userId) {
+  try {
+    const response = await axios.get(imageUrl, {
+      responseType: "arraybuffer",
+      timeout: 30000,
+      httpsAgent: new https.Agent({ keepAlive: true }),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+
+    const buffer = Buffer.from(response.data, "binary");
+    const fileName = `emoji_${Date.now()}.png`;
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("emojis")
+      .upload(fileName, buffer, {
+        contentType: "image/png",
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = supabase.storage
+      .from("emojis")
+      .getPublicUrl(fileName);
+
+    const { data: emojiData, error: emojiError } = await supabase
+      .from("emojis")
+      .insert({
+        image_url: publicUrlData.publicUrl,
+        prompt: prompt,
+        creator_user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (emojiError) throw emojiError;
+
+    return { publicUrl: publicUrlData.publicUrl, emojiData };
+  } catch (error) {
+    console.error("Error uploading emoji:", error);
+    throw error;
+  }
+}
+
+// Updated /api/generate-emoji route
 app.post("/api/generate-emoji", async (req, res) => {
   const inputPrompt = req.body.input.prompt;
   const userId = req.auth.userId;
@@ -131,49 +177,17 @@ app.post("/api/generate-emoji", async (req, res) => {
     apply_watermark: false,
   };
   try {
-    // Check if user has enough credits
     if (req.profile.credits <= 0) {
       return res.status(403).json({ error: "Not enough credits" });
     }
 
     const output = await replicate.run(
       "fofr/sdxl-emoji:dee76b5afde21b0f01ed7925f0665b7e879c50ee718c5f78a9d38e04d523cc5e",
-      {
-        input,
-      }
+      { input }
     );
 
-    // Upload the generated emoji to Supabase storage
     const imageUrl = output[0];
-    const response = await fetch(imageUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const fileName = `emoji_${Date.now()}.png`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("emojis")
-      .upload(fileName, buffer, {
-        contentType: "image/png",
-      });
-
-    if (uploadError) throw uploadError;
-
-    // Get the public URL of the uploaded image
-    const { data: publicUrlData } = supabase.storage
-      .from("emojis")
-      .getPublicUrl(fileName);
-
-    // Add entry to the emojis table
-    const { data: emojiData, error: emojiError } = await supabase
-      .from("emojis")
-      .insert({
-        image_url: publicUrlData.publicUrl,
-        prompt: inputPrompt,
-        creator_user_id: userId,
-      })
-      .select()
-      .single();
-
-    if (emojiError) throw emojiError;
+    const { publicUrl, emojiData } = await uploadEmojiToSupabase(imageUrl, inputPrompt, userId);
 
     // Deduct a credit
     const { error } = await supabase
@@ -183,12 +197,24 @@ app.post("/api/generate-emoji", async (req, res) => {
 
     if (error) throw error;
 
-    res.json({ output: publicUrlData.publicUrl, emojiData });
+    res.json({ output: publicUrl, emojiData });
   } catch (error) {
     console.error("Error processing emoji:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while processing the emoji" });
+    res.status(500).json({ error: "An error occurred while processing the emoji" });
+  }
+});
+
+// Updated /api/upload-emoji route
+app.post("/api/upload-emoji", async (req, res) => {
+  const { imageUrl } = req.body;
+  const userId = req.auth.userId;
+
+  try {
+    const { publicUrl, emojiData } = await uploadEmojiToSupabase(imageUrl, "Uploaded for testing", userId);
+    res.json({ message: "Emoji uploaded successfully", emojiData });
+  } catch (error) {
+    console.error("Error uploading emoji:", error);
+    res.status(500).json({ error: "An error occurred while uploading the emoji" });
   }
 });
 
@@ -217,69 +243,4 @@ app.listen(port, () => {
 app.post("/api/initialize-user", (req, res) => {
   // This route already has handleAuth applied
   res.json({ message: "User initialized successfully", profile: req.profile });
-});
-
-// Add this new route after the existing routes
-app.post("/api/upload-emoji", async (req, res) => {
-  const { imageUrl } = req.body;
-  const userId = req.auth.userId;
-
-  try {
-    const response = await axios.get(imageUrl, {
-      responseType: "arraybuffer",
-      timeout: 30000, // 30 seconds timeout
-      httpsAgent: new https.Agent({ keepAlive: true }),
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
-    });
-
-    const buffer = Buffer.from(response.data, "binary");
-
-    // Generate a unique filename
-    const fileName = `emoji_${Date.now()}.png`;
-
-    // Upload to Supabase storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("emojis")
-      .upload(fileName, buffer, {
-        contentType: "image/png",
-      });
-
-    if (uploadError) throw uploadError;
-
-    // Get the public URL of the uploaded image
-    const { data: publicUrlData } = supabase.storage
-      .from("emojis")
-      .getPublicUrl(fileName);
-
-    // Add entry to the emojis table
-    const { data: emojiData, error: emojiError } = await supabase
-      .from("emojis")
-      .insert({
-        image_url: publicUrlData.publicUrl,
-        prompt: "Uploaded for testing",
-        creator_user_id: userId,
-      })
-      .select()
-      .single();
-
-    if (emojiError) throw emojiError;
-
-    res.json({ message: "Emoji uploaded successfully", emojiData });
-  } catch (error) {
-    console.error("Error uploading emoji:", error);
-    if (error.response) {
-      console.error("Response data:", error.response.data);
-      console.error("Response status:", error.response.status);
-      console.error("Response headers:", error.response.headers);
-    } else if (error.request) {
-      console.error("Request:", error.request);
-    } else {
-      console.error("Error message:", error.message);
-    }
-    console.error("Error config:", error.config);
-    res
-      .status(500)
-      .json({ error: "An error occurred while uploading the emoji" });
-  }
 });
