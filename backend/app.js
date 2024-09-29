@@ -218,26 +218,144 @@ app.post("/api/upload-emoji", async (req, res) => {
   }
 });
 
-app.post("/api/like-emoji", (req, res) => {
-  const { emojiUrl } = req.body;
-  emojiLikes[emojiUrl] = (emojiLikes[emojiUrl] || 0) + 1;
-  res.json({ likes: emojiLikes[emojiUrl] });
-});
+// Update the /api/like-emoji route
+app.post("/api/like-emoji", async (req, res) => {
+  const { emojiId } = req.body;
+  const userId = req.auth.userId;
 
-app.post("/api/unlike-emoji", (req, res) => {
-  const { emojiUrl } = req.body;
-  if (emojiLikes[emojiUrl] && emojiLikes[emojiUrl] > 0) {
-    emojiLikes[emojiUrl]--;
+  try {
+    // Check if the user has already liked this emoji
+    const { data: existingLike, error: likeCheckError } = await supabase
+      .from('emoji_likes')
+      .select()
+      .eq('emoji_id', emojiId)
+      .eq('user_id', userId)
+      .single();
+
+    if (likeCheckError && likeCheckError.code !== 'PGRST116') {
+      console.error("Error checking existing like:", likeCheckError);
+      throw likeCheckError;
+    }
+
+    if (existingLike) {
+      return res.status(400).json({ error: "You've already liked this emoji" });
+    }
+
+    // Add the like to emoji_likes table
+    const { data: insertedLike, error: insertError } = await supabase
+      .from('emoji_likes')
+      .insert({ emoji_id: emojiId, user_id: userId })
+      .select();
+
+    if (insertError) {
+      console.error("Error inserting like:", insertError);
+      throw insertError;
+    }
+
+    console.log("Inserted like:", insertedLike);
+
+    // Increment the likes_count using rpc
+    const { data: incrementResult, error: incrementError } = await supabase
+      .rpc('increment', { row_id: emojiId });
+
+    if (incrementError) {
+      console.error("Error incrementing likes count:", incrementError);
+      throw incrementError;
+    }
+
+    // Fetch the updated emoji
+    const { data: updatedEmoji, error: fetchError } = await supabase
+      .from('emojis')
+      .select()
+      .eq('id', emojiId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching updated emoji:", fetchError);
+      throw fetchError;
+    }
+
+    console.log("Updated emoji:", updatedEmoji);
+
+    res.json({ likes: updatedEmoji.likes_count });
+  } catch (error) {
+    console.error("Error liking emoji:", error);
+    res.status(500).json({ error: "An error occurred while liking the emoji" });
   }
-  res.json({ likes: emojiLikes[emojiUrl] || 0 });
 });
 
-app.get("/api/emoji-likes", (req, res) => {
-  res.json(emojiLikes);
+// Update the /api/unlike-emoji route
+app.post("/api/unlike-emoji", async (req, res) => {
+  const { emojiId } = req.body;
+  const userId = req.auth.userId;
+
+  try {
+    // Check if the user has liked this emoji
+    const { data: existingLike, error: likeCheckError } = await supabase
+      .from('emoji_likes')
+      .select()
+      .eq('emoji_id', emojiId)
+      .eq('user_id', userId)
+      .single();
+
+    if (likeCheckError && likeCheckError.code !== 'PGRST116') {
+      console.error("Error checking existing like:", likeCheckError);
+      throw likeCheckError;
+    }
+
+    if (!existingLike) {
+      return res.status(400).json({ error: "You haven't liked this emoji" });
+    }
+
+    // Remove the like from emoji_likes table
+    const { data: deletedLike, error: deleteError } = await supabase
+      .from('emoji_likes')
+      .delete()
+      .eq('emoji_id', emojiId)
+      .eq('user_id', userId)
+      .select();
+
+    if (deleteError) {
+      console.error("Error deleting like:", deleteError);
+      throw deleteError;
+    }
+
+    console.log("Deleted like:", deletedLike);
+
+    // Decrement the likes_count using rpc
+    const { data: decrementResult, error: decrementError } = await supabase
+      .rpc('decrement', { row_id: emojiId });
+
+    if (decrementError) {
+      console.error("Error decrementing likes count:", decrementError);
+      throw decrementError;
+    }
+
+    // Fetch the updated emoji
+    const { data: updatedEmoji, error: fetchError } = await supabase
+      .from('emojis')
+      .select()
+      .eq('id', emojiId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching updated emoji:", fetchError);
+      throw fetchError;
+    }
+
+    console.log("Updated emoji:", updatedEmoji);
+
+    res.json({ likes: updatedEmoji.likes_count });
+  } catch (error) {
+    console.error("Error unliking emoji:", error);
+    res.status(500).json({ error: "An error occurred while unliking the emoji" });
+  }
 });
 
-// Add this new endpoint to fetch all emojis
+// Update the /api/emojis endpoint to include user's likes
 app.get("/api/emojis", async (req, res) => {
+  const userId = req.auth.userId;
+
   try {
     const { data, error } = await supabase
       .from("emojis")
@@ -247,6 +365,13 @@ app.get("/api/emojis", async (req, res) => {
     if (error) throw error;
 
     res.json(data);
+    // // Transform the data to include a boolean 'liked' property
+    // const transformedData = data.map(emoji => ({
+    //   ...emoji,
+    //   liked: emoji.liked.some(like => like.user_id === userId)
+    // }));
+
+    // res.json(transformedData);
   } catch (error) {
     console.error("Error fetching emojis:", error);
     res.status(500).json({ error: "An error occurred while fetching emojis" });

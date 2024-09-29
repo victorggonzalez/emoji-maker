@@ -12,6 +12,7 @@ interface Emoji {
   likes_count: number;
   creator_user_id: string;
   created_at: string;
+  liked: boolean; // Added to track user likes
 }
 
 interface EmojiGridProps {
@@ -21,7 +22,6 @@ interface EmojiGridProps {
 export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   const { isSignedIn, getToken } = useAuth();
   const [emojis, setEmojis] = useState<Emoji[]>([]);
-  const [emojiLikes, setEmojiLikes] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,12 +40,6 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
       }
       const data = await response.json();
       setEmojis(data);
-      // Initialize likes
-      const likes: Record<string, number> = {};
-      data.forEach((emoji: Emoji) => {
-        likes[emoji.image_url] = emoji.likes_count;
-      });
-      setEmojiLikes(likes);
     } catch (err) {
       console.error("Error fetching emojis:", err);
       setError("Failed to load emojis. Please try again later.");
@@ -60,9 +54,8 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     }
   }, [isSignedIn, fetchEmojis, shouldRefetch]);
 
-  const toggleLike = async (emoji: string) => {
-    const isLiked = emojiLikes[emoji] && emojiLikes[emoji] > 0;
-    const endpoint = isLiked ? '/api/unlike-emoji' : '/api/like-emoji';
+  const toggleLike = async (emoji: Emoji) => {
+    const endpoint = emoji.liked ? '/api/unlike-emoji' : '/api/like-emoji';
     
     try {
       const token = await getToken();
@@ -72,16 +65,19 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ emojiUrl: emoji }),
+        body: JSON.stringify({ emojiId: emoji.id }),
       });
       if (!response.ok) {
         throw new Error('Failed to update like');
       }
       const data = await response.json();
-      setEmojiLikes(prev => ({
-        ...prev,
-        [emoji]: data.likes,
-      }));
+      setEmojis(prevEmojis => 
+        prevEmojis.map(e => 
+          e.id === emoji.id 
+            ? { ...e, likes_count: data.likes, liked: !e.liked } 
+            : e
+        )
+      );
     } catch (err) {
       console.error("Error updating like:", err);
       // Optionally, show an error message to the user
@@ -153,11 +149,11 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => toggleLike(emoji.image_url)}
+                onClick={() => toggleLike(emoji)}
               >
                 <Heart
                   className={`h-6 w-6 ${
-                    emojiLikes[emoji.image_url] > 0 ? "fill-current text-red-500" : ""
+                    emoji.liked ? "fill-current text-red-500" : ""
                   }`}
                 />
               </Button>
@@ -177,7 +173,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
               </Button>
             </div>
             <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">
-              Likes: {emojiLikes[emoji.image_url] || 0}
+              Likes: {emoji.likes_count}
             </div>
           </Card>
         ))}
