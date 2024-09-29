@@ -352,26 +352,29 @@ app.post("/api/unlike-emoji", async (req, res) => {
   }
 });
 
-// Update the /api/emojis endpoint to include user's likes
+// Update the /api/emojis endpoint
 app.get("/api/emojis", async (req, res) => {
   const userId = req.auth.userId;
 
   try {
     const { data, error } = await supabase
       .from("emojis")
-      .select("*")
+      .select(`
+        *,
+        emoji_likes (user_id)
+      `)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    res.json(data);
-    // // Transform the data to include a boolean 'liked' property
-    // const transformedData = data.map(emoji => ({
-    //   ...emoji,
-    //   liked: emoji.liked.some(like => like.user_id === userId)
-    // }));
+    // Transform the data to include a boolean 'liked' property
+    const transformedData = data.map(emoji => ({
+      ...emoji,
+      liked: emoji.emoji_likes.some(like => like.user_id === userId),
+      emoji_likes: undefined // Remove the emoji_likes array from the response
+    }));
 
-    // res.json(transformedData);
+    res.json(transformedData);
   } catch (error) {
     console.error("Error fetching emojis:", error);
     res.status(500).json({ error: "An error occurred while fetching emojis" });

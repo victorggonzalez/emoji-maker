@@ -12,7 +12,7 @@ interface Emoji {
   likes_count: number;
   creator_user_id: string;
   created_at: string;
-  liked: boolean; // Added to track user likes
+  liked: boolean;
 }
 
 interface EmojiGridProps {
