@@ -1,5 +1,26 @@
+require('dotenv').config();
+
 const express = require("express");
 const cors = require("cors");
+const { createClient } = require('@supabase/supabase-js');
+const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Supabase URL or Key is missing. Please check your .env file.');
+  process.exit(1);
+}
+
+if (!process.env.CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+  console.error('Clerk keys are missing. Please check your .env file.');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 const Replicate = require("replicate");
 require("dotenv").config();
 
@@ -30,8 +51,69 @@ const requireAuth = (req, res, next) => {
 // Use the simple auth middleware for protected routes
 app.use("/api", requireAuth);
 
+const handleAuth = async (req, res, next) => {
+  console.log('Handling auth');
+  console.log('req.auth:', req.auth);
+  try {
+    const userId = req.auth.userId;
+    console.log('Authenticated user:', userId);
+    
+    // Check if user exists in profiles table
+    let { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+
+    if (!profile) {
+      // User doesn't exist, create a new profile
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert([
+          { user_id: userId, credits: 3, tier: 'free' }
+        ])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+      profile = newProfile;
+      console.log('Created new user profile:', profile);
+    } else {
+      console.log('Existing user profile:', profile);
+    }
+
+    req.profile = profile;
+    next();
+  } catch (error) {
+    console.error('Error in auth middleware:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const clerk = require('@clerk/clerk-sdk-node');
+
+const clerkMiddleware = clerk.ClerkExpressRequireAuth({
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
+
+// Then use it in your routes
+app.use(clerkMiddleware);
+
+// Apply handleAuth only to specific routes
+const authRoutes = ['/api/generate-emoji', '/api/like-emoji', '/api/unlike-emoji', '/api/initialize-user'];
+app.use(authRoutes, handleAuth);
+
+// Use the simple auth middleware for protected routes
+app.use("/api", requireAuth);
+
 app.post("/api/generate-emoji", async (req, res) => {
   const inputPrompt = req.body.input.prompt;
+  const userId = req.auth.userId;
   const input = {
     prompt: "A TOK emoji of " + inputPrompt,
     width: 1024,
@@ -39,12 +121,26 @@ app.post("/api/generate-emoji", async (req, res) => {
     apply_watermark: false,
   };
   try {
+    // Check if user has enough credits
+    if (req.profile.credits <= 0) {
+      return res.status(403).json({ error: "Not enough credits" });
+    }
+
     const output = await replicate.run(
       "fofr/sdxl-emoji:dee76b5afde21b0f01ed7925f0665b7e879c50ee718c5f78a9d38e04d523cc5e",
       {
         input,
       }
     );
+
+    // Deduct a credit
+    const { error } = await supabase
+      .from('profiles')
+      .update({ credits: req.profile.credits - 1 })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
     console.log(output);
     res.json({ output });
   } catch (error) {
@@ -75,4 +171,9 @@ app.get("/api/emoji-likes", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
+});
+
+app.post("/api/initialize-user", (req, res) => {
+  // This route already has handleAuth applied
+  res.json({ message: "User initialized successfully", profile: req.profile });
 });
