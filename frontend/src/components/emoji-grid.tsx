@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Heart, Download } from "lucide-react";
+import { Heart, Download, Upload } from "lucide-react";
+import axios from "axios";
 
 interface EmojiGridProps {
   emojis: string[];
@@ -90,6 +91,26 @@ export function EmojiGrid({ emojis }: EmojiGridProps) {
       .catch((error) => console.error("Error downloading emoji:", error));
   };
 
+  const handleUpload = async (emoji: string) => {
+    try {
+      const token = await getToken();
+      const response = await axios.post(
+        "http://localhost:3001/api/upload-emoji",
+        { imageUrl: emoji },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Emoji uploaded successfully:", response.data);
+      // Optionally, you can show a success message to the user
+    } catch (error) {
+      console.error("Error uploading emoji:", error);
+      // Optionally, show an error message to the user
+    }
+  };
+
   if (!isSignedIn) {
     return null; // or return a message asking to sign in
   }
@@ -119,6 +140,13 @@ export function EmojiGrid({ emojis }: EmojiGridProps) {
                 onClick={() => handleDownload(emoji)}
               >
                 <Download className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleUpload(emoji)}
+              >
+                <Upload className="h-6 w-6" />
               </Button>
             </div>
             <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">

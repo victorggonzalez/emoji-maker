@@ -6,7 +6,7 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 
 interface EmojiFormProps {
-  onEmojiGenerated: (emoji: string) => void;
+  onEmojiGenerated: (emoji: string, emojiData: any) => void;
 }
 
 export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
@@ -34,7 +34,7 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
           },
         }
       );
-      onEmojiGenerated(response.data.output[0]);
+      onEmojiGenerated(response.data.output, response.data.emojiData);
     } catch (error) {
       console.error("Error generating emoji:", error);
     } finally {
