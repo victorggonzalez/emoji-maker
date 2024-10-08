@@ -387,9 +387,24 @@ app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
 });
 
-app.post("/api/initialize-user", (req, res) => {
-  // This route already has handleAuth applied
-  res.json({ message: "User initialized successfully", profile: req.profile });
+app.post("/api/initialize-user", async (req, res) => {
+  try {
+    // This route already has handleAuth applied, so req.profile should be available
+    const { user_id, credits, tier } = req.profile;
+    
+    // Only send back the necessary information
+    res.json({
+      message: "User initialized successfully",
+      profile: {
+        user_id,
+        credits,
+        tier
+      }
+    });
+  } catch (error) {
+    console.error("Error in initialize-user route:", error);
+    res.status(500).json({ error: "An error occurred while initializing the user" });
+  }
 });
 
 module.exports = app;
