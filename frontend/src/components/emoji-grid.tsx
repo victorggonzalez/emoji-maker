@@ -124,10 +124,6 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     }
   };
 
-  const handleNewEmojiAdded = useCallback(() => {
-    fetchEmojis();
-  }, [fetchEmojis]);
-
   if (!isSignedIn) {
     return null; // or return a message asking to sign in
   }
