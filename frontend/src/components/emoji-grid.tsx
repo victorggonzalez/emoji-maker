@@ -4,6 +4,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Heart, Download, Upload } from "lucide-react";
 import axios from "axios";
+import { API_URL } from "../config";
 
 interface Emoji {
   id: number;
@@ -30,7 +31,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     setError(null);
     try {
       const token = await getToken();
-      const response = await fetch('http://localhost:3001/api/emojis', {
+      const response = await fetch(`${API_URL}/api/emojis`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -59,7 +60,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     
     try {
       const token = await getToken();
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     try {
       const token = await getToken();
       const response = await axios.post(
-        "http://localhost:3001/api/upload-emoji",
+        `${API_URL}/api/upload-emoji`,
         { imageUrl: emoji },
         {
           headers: {

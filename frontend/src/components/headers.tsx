@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { SignedIn, SignedOut, UserButton, SignInButton, useAuth } from "@clerk/clerk-react";
 import { Button } from './ui/button';
 import { X, Menu } from 'lucide-react';
+import { API_URL } from "../config";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function Header() {
       if (isSignedIn) {
         try {
           const token = await getToken();
-          const response = await fetch('http://localhost:3001/api/initialize-user', {
+          const response = await fetch(`${API_URL}/api/initialize-user`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

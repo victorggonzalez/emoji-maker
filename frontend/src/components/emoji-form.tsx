@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Card } from "./ui/card";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
+import { API_URL } from "../config";
 
 interface EmojiFormProps {
   onEmojiGenerated: () => void;
@@ -22,7 +23,7 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
     try {
       const token = await getToken();
       await axios.post(
-        "http://localhost:3001/api/generate-emoji",
+        `${API_URL}/api/generate-emoji`,
         {
           input: {
             prompt,
