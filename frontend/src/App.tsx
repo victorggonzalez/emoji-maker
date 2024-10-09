@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
 import Header from "./components/headers";
 import { EmojiGrid } from "./components/emoji-grid";
@@ -17,13 +17,7 @@ function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { isSignedIn, getToken } = useAuth();
 
-  const handleEmojiGenerated = () => {
-    setShouldRefetchEmojis(prev => !prev);
-    // Refetch user profile to update credits
-    fetchUserProfile();
-  };
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     if (isSignedIn) {
       try {
         const token = await getToken();
@@ -43,15 +37,20 @@ function App() {
         console.error('Error fetching user profile:', error);
       }
     }
-  };
+  }, [isSignedIn, getToken]);
 
   useEffect(() => {
     fetchUserProfile();
-  }, [isSignedIn, getToken]);
+  }, [fetchUserProfile]);
+
+  const handleEmojiGenerated = () => {
+    setShouldRefetchEmojis(prev => !prev);
+    fetchUserProfile();
+  };
 
   return (
     <div className="App">
-      <Header />
+      <Header userProfile={userProfile} />
       <div className="container mx-auto px-4 py-8">
         <SignedIn>
           <EmojiForm onEmojiGenerated={handleEmojiGenerated} userProfile={userProfile} />

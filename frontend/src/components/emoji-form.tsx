@@ -5,6 +5,7 @@ import { Card } from "./ui/card";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../config";
+import { Loader2 } from "lucide-react"; // Import the Loader2 icon from lucide-react
 
 interface UserProfile {
   user_id: string;
@@ -55,14 +56,10 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
         if (error.code === 'ECONNABORTED') {
           setError("The request timed out. Please try again.");
         } else if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
           setError(`Error: ${error.response.data.error || 'An unexpected error occurred'}`);
         } else if (error.request) {
-          // The request was made but no response was received
           setError("No response received from the server. Please try again.");
         } else {
-          // Something happened in setting up the request that triggered an Error
           setError("An unexpected error occurred. Please try again.");
         }
       } else {
@@ -73,7 +70,7 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
     }
   };
 
-  const isButtonDisabled = isLoading || !prompt || prompt.length < 3 || (userProfile && userProfile.credits <= 0);
+  const isButtonDisabled = !prompt || prompt.length < 3 || (userProfile && userProfile.credits <= 0);
 
   return (
     <Card className="p-4">
@@ -86,9 +83,16 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
           required
           disabled={isLoading}
         />
-        <Button type="submit" disabled={!!isButtonDisabled}>
-          {isLoading ? "Generating..." : "Generate"}
-        </Button>
+        {isLoading ? (
+          <div className="flex flex-col items-center space-y-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p className="text-sm text-gray-600">Generating your emoji...</p>
+          </div>
+        ) : (
+          <Button type="submit" disabled={!!isButtonDisabled} className="w-full">
+            Generate
+          </Button>
+        )}
         {userProfile && userProfile.credits <= 0 && (
           <p className="text-red-500 mt-2">You have no credits left. You cannot generate new emojis.</p>
         )}

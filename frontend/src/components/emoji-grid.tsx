@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { Card } from "./ui/card";
-import { Button } from "./ui/button";
-import { Heart, Download, Upload } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../config";
 import { EmojiPlaceholder } from "./emoji-placeholder";
+import { EmojiCard } from "./emoji-card";
 
 interface Emoji {
   id: number;
@@ -82,7 +80,6 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
       );
     } catch (err) {
       console.error("Error updating like:", err);
-      // Optionally, show an error message to the user
     }
   };
 
@@ -94,7 +91,6 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
         const a = document.createElement("a");
         a.style.display = "none";
         a.href = url;
-        // Extract file name from the URL or use a default name
         const fileName = emoji.split("/").pop() || "emoji.png";
         a.download = fileName;
         document.body.appendChild(a);
@@ -118,10 +114,8 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
         }
       );
       console.log("Emoji uploaded successfully:", response.data);
-      // Optionally, you can show a success message to the user
     } catch (error) {
       console.error("Error uploading emoji:", error);
-      // Optionally, show an error message to the user
     }
   };
 
@@ -150,44 +144,13 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {emojis.map((emoji) => (
-        <Card key={emoji.id} className="relative group w-64 h-64">
-          <img
-            src={emoji.image_url}
-            alt={emoji.prompt}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleLike(emoji)}
-            >
-              <Heart
-                className={`h-6 w-6 ${
-                  emoji.liked ? "fill-current text-red-500" : ""
-                }`}
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDownload(emoji.image_url)}
-            >
-              <Download className="h-6 w-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleUpload(emoji.image_url)}
-            >
-              <Upload className="h-6 w-6" />
-            </Button>
-          </div>
-          <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">
-            Likes: {emoji.likes_count}
-          </div>
-        </Card>
+        <EmojiCard
+          key={emoji.id}
+          emoji={emoji}
+          onLike={toggleLike}
+          onDownload={handleDownload}
+          onUpload={handleUpload}
+        />
       ))}
     </div>
   );

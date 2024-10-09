@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { SignedIn, SignedOut, UserButton, SignInButton, useAuth } from "@clerk/clerk-react";
+import { useState } from 'react';
+import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 import { Button } from './ui/button';
 import { X, Menu } from 'lucide-react';
-import { API_URL } from "../config";
 
 interface UserProfile {
   user_id: string;
@@ -10,41 +9,16 @@ interface UserProfile {
   tier: string;
 }
 
-export default function Header() {
+interface HeaderProps {
+  userProfile: UserProfile | null;
+}
+
+export default function Header({ userProfile }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isSignedIn, getToken } = useAuth();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-
-  useEffect(() => {
-    const initializeUser = async () => {
-      if (isSignedIn) {
-        try {
-          const token = await getToken();
-          const response = await fetch(`${API_URL}/api/initialize-user`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (!response.ok) {
-            throw new Error('Failed to initialize user');
-          }
-          const data = await response.json();
-          setUserProfile(data.profile);
-          console.log('User initialized successfully');
-        } catch (error) {
-          console.error('Error initializing user:', error);
-        }
-      }
-    };
-
-    initializeUser();
-  }, [isSignedIn, getToken]);
 
   return (
     <div className="flex items-center space-x-4 justify-between mt-4 mx-4">
