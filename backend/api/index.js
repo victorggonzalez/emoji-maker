@@ -125,7 +125,10 @@ app.use("/api", requireAuth);
 
 // New helper function for uploading emoji to Supabase
 async function uploadEmojiToSupabase(imageUrl, prompt, userId) {
+  console.log(`Starting upload for user ${userId}, prompt: ${prompt}`);
   try {
+    console.log("Fetching image from URL");
+    const fetchStartTime = Date.now();
     const response = await axios.get(imageUrl, {
       responseType: "arraybuffer",
       timeout: 30000,
@@ -133,22 +136,34 @@ async function uploadEmojiToSupabase(imageUrl, prompt, userId) {
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
     });
+    const fetchEndTime = Date.now();
+    console.log(`Image fetched in ${fetchEndTime - fetchStartTime}ms`);
 
     const buffer = Buffer.from(response.data, "binary");
     const fileName = `emoji_${Date.now()}.png`;
 
+    console.log("Uploading to Supabase storage");
+    const uploadStartTime = Date.now();
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("emojis")
       .upload(fileName, buffer, {
         contentType: "image/png",
       });
+    const uploadEndTime = Date.now();
+    console.log(`Supabase storage upload completed in ${uploadEndTime - uploadStartTime}ms`);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("Supabase storage upload error:", uploadError);
+      throw uploadError;
+    }
 
+    console.log("Getting public URL");
     const { data: publicUrlData } = supabase.storage
       .from("emojis")
       .getPublicUrl(fileName);
 
+    console.log("Inserting emoji data into Supabase");
+    const insertStartTime = Date.now();
     const { data: emojiData, error: emojiError } = await supabase
       .from("emojis")
       .insert({
@@ -158,47 +173,73 @@ async function uploadEmojiToSupabase(imageUrl, prompt, userId) {
       })
       .select()
       .single();
+    const insertEndTime = Date.now();
+    console.log(`Supabase data insertion completed in ${insertEndTime - insertStartTime}ms`);
 
-    if (emojiError) throw emojiError;
+    if (emojiError) {
+      console.error("Supabase data insertion error:", emojiError);
+      throw emojiError;
+    }
 
+    console.log("Upload process completed successfully");
     return { publicUrl: publicUrlData.publicUrl, emojiData };
   } catch (error) {
-    console.error("Error uploading emoji:", error);
+    console.error("Error in uploadEmojiToSupabase:", error);
     throw error;
   }
 }
 
 // Updated /api/generate-emoji route
 app.post("/api/generate-emoji", async (req, res) => {
+  console.log("Received generate-emoji request");
   const inputPrompt = req.body.input.prompt;
   const userId = req.auth.userId;
+  console.log(`User ${userId} requested emoji generation with prompt: ${inputPrompt}`);
+  
   const input = {
     prompt: "A TOK emoji of " + inputPrompt,
     width: 1024,
     height: 1024,
     apply_watermark: false,
   };
+  
   try {
+    console.log("Checking user credits");
     if (req.profile.credits <= 0) {
+      console.log(`User ${userId} has insufficient credits`);
       return res.status(403).json({ error: "Not enough credits" });
     }
 
+    console.log("Calling Replicate API");
+    const startTime = Date.now();
     const output = await replicate.run(
       "fofr/sdxl-emoji:dee76b5afde21b0f01ed7925f0665b7e879c50ee718c5f78a9d38e04d523cc5e",
       { input }
     );
+    const endTime = Date.now();
+    console.log(`Replicate API call completed in ${endTime - startTime}ms`);
 
     const imageUrl = output[0];
-    const { publicUrl, emojiData } = await uploadEmojiToSupabase(imageUrl, inputPrompt, userId);
+    console.log(`Generated image URL: ${imageUrl}`);
 
-    // Deduct a credit
+    console.log("Uploading emoji to Supabase");
+    const uploadStartTime = Date.now();
+    const { publicUrl, emojiData } = await uploadEmojiToSupabase(imageUrl, inputPrompt, userId);
+    const uploadEndTime = Date.now();
+    console.log(`Supabase upload completed in ${uploadEndTime - uploadStartTime}ms`);
+
+    console.log("Deducting user credit");
     const { error } = await supabase
       .from("profiles")
       .update({ credits: req.profile.credits - 1 })
       .eq("user_id", userId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error deducting credit:", error);
+      throw error;
+    }
 
+    console.log("Emoji generation process completed successfully");
     res.json({ output: publicUrl, emojiData });
   } catch (error) {
     console.error("Error processing emoji:", error);
