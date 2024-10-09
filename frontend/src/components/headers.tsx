@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 import { Button } from './ui/button';
-import { X, Menu } from 'lucide-react';
+import { X, Menu, Sparkles } from 'lucide-react';
 
 interface UserProfile {
   user_id: string;
@@ -21,37 +21,45 @@ export default function Header({ userProfile }: HeaderProps) {
   };
 
   return (
-    <div className="flex items-center space-x-4 justify-between mt-4 mx-4">
-      <h2 className="text-2xl font-bold">AI Emoj maker</h2>
-      <div className="flex items-center space-x-4">
-        <SignedOut>
-          <SignInButton mode="modal">
-            <Button variant="default">Sign In</Button>
-          </SignInButton>
-        </SignedOut>
-        <SignedIn>
-          {userProfile && (
-            <span className="mr-4">Credits: {userProfile.credits}</span>
-          )}
-          <UserButton />
-        </SignedIn>
-        <div className="md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMenu}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </Button>
+    <div className="bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-md fixed top-0 left-0 right-0 z-10">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold flex items-center">
+            <Sparkles className="mr-2" /> AI Emoj maker
+          </h2>
+          <div className="flex items-center space-x-4">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="secondary" className="bg-white text-purple-600 hover:bg-purple-100">Sign In</Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              {userProfile && (
+                <span className="bg-white text-purple-600 px-3 py-1 rounded-full font-semibold">
+                  Credits: {userProfile.credits}
+                </span>
+              )}
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMenu}
+                aria-label="Toggle menu"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       {isMenuOpen && (
-        <div className="absolute top-16 right-4 bg-white shadow-md rounded-md p-4">
+        <div className="md:hidden bg-white shadow-md rounded-md p-4 absolute right-4 mt-2">
           {/* Add your menu items here */}
         </div>
       )}

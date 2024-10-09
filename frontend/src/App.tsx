@@ -5,6 +5,7 @@ import { EmojiGrid } from "./components/emoji-grid";
 import { EmojiForm } from "./components/emoji-form";
 import { API_URL } from "./config";
 import "./App.css";
+import "./custom-scrollbar.css";
 
 interface UserProfile {
   user_id: string;
@@ -49,21 +50,26 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100">
       <Header userProfile={userProfile} />
-      <div className="container mx-auto px-4 py-8">
-        <SignedIn>
-          <EmojiForm onEmojiGenerated={handleEmojiGenerated} userProfile={userProfile} />
-          <br />
-          <EmojiGrid shouldRefetch={shouldRefetchEmojis} />
-        </SignedIn>
-        <SignedOut>
-          <div className="text-center">
-            <p className="text-xl mb-4">Welcome to Emoj maker!</p>
-            <p>Sign in to start creating and interacting with emojis.</p>
-          </div>
-        </SignedOut>
-      </div>
+      <main className="flex-grow w-full pt-24">
+        <div className="container mx-auto px-4 flex flex-col h-full max-w-7xl">
+          <SignedIn>
+            <div className="mb-4 sticky top-20 bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100 z-10 pb-4">
+              <EmojiForm onEmojiGenerated={handleEmojiGenerated} userProfile={userProfile} />
+            </div>
+            <div className="flex-grow overflow-auto custom-scrollbar">
+              <EmojiGrid shouldRefetch={shouldRefetchEmojis} />
+            </div>
+          </SignedIn>
+          <SignedOut>
+            <div className="text-center bg-white bg-opacity-80 p-8 rounded-lg shadow-md">
+              <p className="text-xl mb-4 text-purple-600">Welcome to Emoj maker!</p>
+              <p className="text-gray-600">Sign in to start creating and interacting with emojis.</p>
+            </div>
+          </SignedOut>
+        </div>
+      </main>
     </div>
   );
 }

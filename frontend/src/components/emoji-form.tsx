@@ -5,7 +5,7 @@ import { Card } from "./ui/card";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../config";
-import { Loader2 } from "lucide-react"; // Import the Loader2 icon from lucide-react
+import { Loader2, Wand2 } from "lucide-react";
 
 interface UserProfile {
   user_id: string;
@@ -73,31 +73,39 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
   const isButtonDisabled = !prompt || prompt.length < 3 || (userProfile && userProfile.credits <= 0);
 
   return (
-    <Card className="p-4">
+    <Card className="p-6 bg-white bg-opacity-80 shadow-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          type="text"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter a prompt to generate a new emoji"
-          required
-          disabled={isLoading}
-        />
+        <div className="relative">
+          <Input
+            type="text"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your emoji..."
+            required
+            disabled={isLoading}
+            className="pl-10 pr-4 py-2 border-2 border-purple-300 focus:border-purple-500 rounded-full"
+          />
+          <Wand2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+        </div>
         {isLoading ? (
           <div className="flex flex-col items-center space-y-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <p className="text-sm text-gray-600">Generating your emoji...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+            <p className="text-sm text-purple-600">Crafting your magical emoji...</p>
           </div>
         ) : (
-          <Button type="submit" disabled={!!isButtonDisabled} className="w-full">
-            Generate
+          <Button 
+            type="submit" 
+            disabled={isButtonDisabled} 
+            className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+          >
+            Generate Emoji
           </Button>
         )}
         {userProfile && userProfile.credits <= 0 && (
-          <p className="text-red-500 mt-2">You have no credits left. You cannot generate new emojis.</p>
+          <p className="text-red-500 mt-2 text-center">You're out of magic! No more credits left.</p>
         )}
         {error && (
-          <p className="text-red-500 mt-2">{error}</p>
+          <p className="text-red-500 mt-2 text-center">{error}</p>
         )}
       </form>
     </Card>

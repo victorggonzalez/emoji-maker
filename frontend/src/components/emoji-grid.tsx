@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { API_URL } from "../config";
-import { EmojiPlaceholder } from "./emoji-placeholder";
 import { EmojiCard } from "./emoji-card";
+import { Loader2 } from "lucide-react";
 
 interface Emoji {
   id: number;
@@ -145,24 +145,33 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <EmojiPlaceholder key={index} />
-        ))}
+      <div className="flex flex-col items-center justify-center h-full">
+        <Loader2 className="animate-spin h-12 w-12 text-purple-500" />
+        <p className="mt-4 text-purple-600">Loading your magical emojis...</p>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <div className="text-center p-8 bg-red-100 rounded-lg">
+        <p className="text-red-500 font-semibold">{error}</p>
+        <p className="text-red-400 mt-2">Please try again later or contact support.</p>
+      </div>
+    );
   }
 
   if (emojis.length === 0) {
-    return <div className="text-center">No emojis found. Create your first emoji!</div>;
+    return (
+      <div className="text-center p-8 bg-purple-100 rounded-lg">
+        <p className="text-purple-600 font-semibold text-xl">Your emoji collection is empty!</p>
+        <p className="text-purple-500 mt-2">Create your first magical emoji above.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-6 justify-items-center">
       {emojis.map((emoji) => (
         <EmojiCard
           key={emoji.id}

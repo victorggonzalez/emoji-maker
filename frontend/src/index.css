@@ -1,5 +1,18 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+/* Add these styles at the beginning of the file */
+html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    max-width: none;
+    text-align: left;
+  }
+  
 
 /* Add any custom styles here */
