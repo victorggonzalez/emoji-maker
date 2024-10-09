@@ -60,7 +60,7 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter a prompt for the emoji"
+          placeholder="Enter a prompt to generate a new emoji"
           required
         />
         <Button type="submit" disabled={!!isButtonDisabled}>

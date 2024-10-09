@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Heart, Download, Upload } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../config";
+import { EmojiPlaceholder } from "./emoji-placeholder";
 
 interface Emoji {
   id: number;
@@ -27,6 +28,8 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEmojis = useCallback(async () => {
+    if (!isSignedIn) return;
+    
     setIsLoading(true);
     setError(null);
     try {
@@ -47,13 +50,11 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  }, [getToken, isSignedIn]);
 
   useEffect(() => {
-    if (isSignedIn) {
-      fetchEmojis();
-    }
-  }, [isSignedIn, fetchEmojis, shouldRefetch]);
+    fetchEmojis();
+  }, [fetchEmojis, shouldRefetch]);
 
   const toggleLike = async (emoji: Emoji) => {
     const endpoint = emoji.liked ? '/api/unlike-emoji' : '/api/like-emoji';
@@ -125,56 +126,69 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   };
 
   if (!isSignedIn) {
-    return null; // or return a message asking to sign in
+    return null;
   }
 
   if (isLoading) {
-    return <div>Loading emojis...</div>;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <EmojiPlaceholder key={index} />
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (emojis.length === 0) {
+    return <div className="text-center">No emojis found. Create your first emoji!</div>;
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {emojis.map((emoji) => (
-          <Card key={emoji.id} className="relative group">
-            <img src={emoji.image_url} alt={emoji.prompt} className="w-full h-auto" />
-            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleLike(emoji)}
-              >
-                <Heart
-                  className={`h-6 w-6 ${
-                    emoji.liked ? "fill-current text-red-500" : ""
-                  }`}
-                />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDownload(emoji.image_url)}
-              >
-                <Download className="h-6 w-6" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleUpload(emoji.image_url)}
-              >
-                <Upload className="h-6 w-6" />
-              </Button>
-            </div>
-            <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">
-              Likes: {emoji.likes_count}
-            </div>
-          </Card>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {emojis.map((emoji) => (
+        <Card key={emoji.id} className="relative group w-64 h-64">
+          <img
+            src={emoji.image_url}
+            alt={emoji.prompt}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => toggleLike(emoji)}
+            >
+              <Heart
+                className={`h-6 w-6 ${
+                  emoji.liked ? "fill-current text-red-500" : ""
+                }`}
+              />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDownload(emoji.image_url)}
+            >
+              <Download className="h-6 w-6" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleUpload(emoji.image_url)}
+            >
+              <Upload className="h-6 w-6" />
+            </Button>
+          </div>
+          <div className="absolute bottom-2 left-2 bg-white bg-opacity-75 px-2 py-1 rounded">
+            Likes: {emoji.likes_count}
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }

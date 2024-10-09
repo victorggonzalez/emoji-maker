@@ -48,7 +48,7 @@ export default function Header() {
 
   return (
     <div className="flex items-center space-x-4 justify-between mt-4 mx-4">
-      <h2 className="text-2xl font-bold">Emoj maker</h2>
+      <h2 className="text-2xl font-bold">AI Emoj maker</h2>
       <div className="flex items-center space-x-4">
         <SignedOut>
           <SignInButton mode="modal">
