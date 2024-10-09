@@ -39,6 +39,15 @@ const port = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Increase the timeout for the entire server
+app.use((req, res, next) => {
+  res.setTimeout(300000, () => {
+    console.log('Request has timed out.');
+    res.send(408);
+  });
+  next();
+});
+
 // Initialize Replicate client
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -212,10 +221,19 @@ app.post("/api/generate-emoji", async (req, res) => {
 
     console.log("Calling Replicate API");
     const startTime = Date.now();
-    const output = await replicate.run(
+    
+    // Use Promise.race to implement a timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Replicate API call timed out')), 280000)
+    );
+    
+    const replicatePromise = replicate.run(
       "fofr/sdxl-emoji:dee76b5afde21b0f01ed7925f0665b7e879c50ee718c5f78a9d38e04d523cc5e",
       { input }
     );
+
+    const output = await Promise.race([replicatePromise, timeoutPromise]);
+    
     const endTime = Date.now();
     console.log(`Replicate API call completed in ${endTime - startTime}ms`);
 
