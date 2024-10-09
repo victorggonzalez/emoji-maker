@@ -162,7 +162,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-6 justify-items-center">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 pb-6 justify-items-center">
       {emojis.map((emoji) => (
         <EmojiCard
           key={emoji.id}

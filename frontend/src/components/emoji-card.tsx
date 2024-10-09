@@ -28,7 +28,7 @@ export function EmojiCard({
 
   return (
     <Card
-      className="relative group w-64 h-64"
+      className="relative group w-full sm:w-64 h-64"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -42,7 +42,7 @@ export function EmojiCard({
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => onLike(emoji)}>
             <Heart
-              className={`h-6 w-6 ${
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${
                 emoji.liked ? "fill-current text-red-500" : ""
               }`}
             />
@@ -52,7 +52,7 @@ export function EmojiCard({
             size="icon"
             onClick={() => onDownload(emoji.image_url)}
           >
-            <Download className="h-6 w-6" />
+            <Download className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
           {!isProduction && (
             <Button
@@ -60,7 +60,7 @@ export function EmojiCard({
               size="icon"
               onClick={() => onUpload(emoji.image_url)}
             >
-              <Upload className="h-6 w-6" />
+              <Upload className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
           )}
           {isCreator && (
@@ -69,12 +69,12 @@ export function EmojiCard({
               size="icon"
               onClick={() => onDelete(emoji.id)}
             >
-              <Trash2 className="h-6 w-6" />
+              <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
           )}
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-75 px-2 py-1 text-sm">
+      <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-75 px-2 py-1 text-xs sm:text-sm">
         <div className="flex justify-between items-center">
           <span>Likes: {emoji.likes_count}</span>
           <Button
