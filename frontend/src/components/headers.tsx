@@ -4,9 +4,16 @@ import { Button } from './ui/button';
 import { X, Menu } from 'lucide-react';
 import { API_URL } from "../config";
 
+interface UserProfile {
+  user_id: string;
+  credits: number;
+  tier: string;
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isSignedIn, getToken } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -27,6 +34,8 @@ export default function Header() {
           if (!response.ok) {
             throw new Error('Failed to initialize user');
           }
+          const data = await response.json();
+          setUserProfile(data.profile);
           console.log('User initialized successfully');
         } catch (error) {
           console.error('Error initializing user:', error);
@@ -47,6 +56,9 @@ export default function Header() {
           </SignInButton>
         </SignedOut>
         <SignedIn>
+          {userProfile && (
+            <span className="mr-4">Credits: {userProfile.credits}</span>
+          )}
           <UserButton />
         </SignedIn>
         <div className="md:hidden">

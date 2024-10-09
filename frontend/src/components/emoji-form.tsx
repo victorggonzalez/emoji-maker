@@ -6,11 +6,18 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../config";
 
-interface EmojiFormProps {
-  onEmojiGenerated: () => void;
+interface UserProfile {
+  user_id: string;
+  credits: number;
+  tier: string;
 }
 
-export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
+interface EmojiFormProps {
+  onEmojiGenerated: () => void;
+  userProfile: UserProfile | null;
+}
+
+export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
   const { getToken } = useAuth();
 
   const [prompt, setPrompt] = useState("");
@@ -44,6 +51,8 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
     }
   };
 
+  const isButtonDisabled = isLoading || !prompt || prompt.length < 3;
+
   return (
     <Card className="p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,9 +63,12 @@ export function EmojiForm({ onEmojiGenerated }: EmojiFormProps) {
           placeholder="Enter a prompt for the emoji"
           required
         />
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Generating..." : "Generate Emoji"}
+        <Button type="submit" disabled={!!isButtonDisabled}>
+          {isLoading ? "Generating..." : "Generate"}
         </Button>
+        {userProfile && userProfile.credits <= 0 && (
+          <p className="text-red-500 mt-2">You have no credits left. You cannot generate new emojis.</p>
+        )}
       </form>
     </Card>
   );
