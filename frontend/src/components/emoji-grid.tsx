@@ -4,16 +4,7 @@ import axios from "axios";
 import { API_URL } from "../config";
 import { EmojiCard } from "./emoji-card";
 import { Loader2 } from "lucide-react";
-
-interface Emoji {
-  id: number;
-  image_url: string;
-  prompt: string;
-  likes_count: number;
-  creator_user_id: string;
-  created_at: string;
-  liked: boolean;
-}
+import { Emoji } from "../types/emoji";
 
 interface EmojiGridProps {
   shouldRefetch: boolean;

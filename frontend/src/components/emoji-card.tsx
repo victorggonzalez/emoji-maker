@@ -3,15 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Heart, Download, Upload, Trash2 } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
-
-interface Emoji {
-  id: number;
-  image_url: string;
-  prompt: string;
-  likes_count: number;
-  liked: boolean;
-  creator_user_id: string;
-}
+import { Emoji } from "../types/emoji";
 
 interface EmojiCardProps {
   emoji: Emoji;

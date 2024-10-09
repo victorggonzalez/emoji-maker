@@ -5,7 +5,7 @@ import { Card } from "./ui/card";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { API_URL } from "../config";
-import { Loader2, Wand2 } from "lucide-react";
+import { Wand2 } from "lucide-react";
 
 interface UserProfile {
   user_id: string;
@@ -95,7 +95,7 @@ export function EmojiForm({ onEmojiGenerated, userProfile }: EmojiFormProps) {
         ) : (
           <Button 
             type="submit" 
-            disabled={isButtonDisabled} 
+            disabled={isButtonDisabled || false} 
             className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
           >
             Generate Emoji
