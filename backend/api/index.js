@@ -466,4 +466,51 @@ app.post("/api/initialize-user", async (req, res) => {
   }
 });
 
+// Add this new route after the other emoji-related routes
+app.delete("/api/delete-emoji/:emojiId", async (req, res) => {
+  const { emojiId } = req.params;
+  const userId = req.auth.userId;
+
+  try {
+    // Check if the emoji exists and belongs to the user
+    const { data: emoji, error: fetchError } = await supabase
+      .from('emojis')
+      .select()
+      .eq('id', emojiId)
+      .eq('creator_user_id', userId)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ error: "Emoji not found or you don't have permission to delete it" });
+      }
+      throw fetchError;
+    }
+
+    // Delete the emoji
+    const { error: deleteError } = await supabase
+      .from('emojis')
+      .delete()
+      .eq('id', emojiId);
+
+    if (deleteError) throw deleteError;
+
+    // Delete the image from storage
+    const fileName = emoji.image_url.split('/').pop();
+    const { error: storageError } = await supabase.storage
+      .from('emojis')
+      .remove([fileName]);
+
+    if (storageError) {
+      console.error("Error deleting file from storage:", storageError);
+      // We don't throw here because the database record is already deleted
+    }
+
+    res.json({ message: "Emoji deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting emoji:", error);
+    res.status(500).json({ error: "An error occurred while deleting the emoji" });
+  }
+});
+
 module.exports = app;

@@ -119,6 +119,26 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
     }
   };
 
+  const handleDelete = async (emojiId: number) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`${API_URL}/api/delete-emoji/${emojiId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete emoji');
+      }
+      // Remove the deleted emoji from the state
+      setEmojis(prevEmojis => prevEmojis.filter(emoji => emoji.id !== emojiId));
+    } catch (err) {
+      console.error("Error deleting emoji:", err);
+      // Optionally, show an error message to the user
+    }
+  };
+
   if (!isSignedIn) {
     return null;
   }
@@ -150,6 +170,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
           onLike={toggleLike}
           onDownload={handleDownload}
           onUpload={handleUpload}
+          onDelete={handleDelete}
         />
       ))}
     </div>

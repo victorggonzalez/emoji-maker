@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Heart, Download, Upload } from "lucide-react";
+import { Heart, Download, Upload, Trash2 } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
 
 interface Emoji {
   id: number;
@@ -9,6 +10,7 @@ interface Emoji {
   prompt: string;
   likes_count: number;
   liked: boolean;
+  creator_user_id: string;
 }
 
 interface EmojiCardProps {
@@ -16,6 +18,7 @@ interface EmojiCardProps {
   onLike: (emoji: Emoji) => Promise<void>;
   onDownload: (imageUrl: string) => void;
   onUpload: (imageUrl: string) => Promise<void>;
+  onDelete: (emojiId: number) => Promise<void>;
 }
 
 export function EmojiCard({
@@ -23,9 +26,13 @@ export function EmojiCard({
   onLike,
   onDownload,
   onUpload,
+  onDelete,
 }: EmojiCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isProduction = import.meta.env.MODE === "production";
+  const { userId } = useAuth();
+
+  const isCreator = emoji.creator_user_id === userId;
 
   return (
     <Card
@@ -62,6 +69,15 @@ export function EmojiCard({
               onClick={() => onUpload(emoji.image_url)}
             >
               <Upload className="h-6 w-6" />
+            </Button>
+          )}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(emoji.id)}
+            >
+              <Trash2 className="h-6 w-6" />
             </Button>
           )}
         </div>
