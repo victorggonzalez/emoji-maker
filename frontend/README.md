@@ -1,50 +1,68 @@
-# React + TypeScript + Vite
+# AI Emoji Maker Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend for the AI Emoji Maker web application. It's built using React, Vite, and integrates with various libraries to provide a seamless user experience for generating and interacting with AI-powered emojis.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Shadcn UI
+- Lucide React (for icons)
+- Clerk (for authentication)
+- Axios (for API requests)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+1. **User Authentication**: Utilizes Clerk for secure user sign-in and management.
+2. **Emoji Generation**: Allows users to input prompts and generate custom emojis using AI.
+3. **Emoji Grid**: Displays all generated emojis in a responsive grid layout.
+4. **Emoji Interactions**: Users can like, download, and delete their own emojis.
+5. **Credit System**: Tracks and displays user credits for generating emojis.
+6. **Responsive Design**: Ensures a great user experience across various device sizes.
 
-- Configure the top-level `parserOptions` property like this:
+## Project Structure
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- `src/components`: Contains all React components
+  - `ui/`: Reusable UI components (Button, Card, Input)
+  - `emoji-card.tsx`: Individual emoji display component
+  - `emoji-form.tsx`: Form for generating new emojis
+  - `emoji-grid.tsx`: Grid display of all emojis
+  - `headers.tsx`: Application header with authentication controls
+- `src/lib`: Utility functions
+- `src/types`: TypeScript type definitions
+- `src/config.ts`: Configuration file for API URL
+- `src/App.tsx`: Main application component
+- `src/main.tsx`: Entry point of the application
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Setup and Running
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Set up environment variables:
+   - Create a `.env` file in the root of the frontend directory
+   - Add the following variables:
+     ```
+     VITE_API_URL=your_backend_api_url
+     VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+     ```
+4. Run the development server:
+   ```
+   npm run dev
+   ```
+5. For production build:
+   ```
+   npm run build
+   ```
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+## Additional Notes
+
+- The project uses Tailwind CSS for styling. Custom styles can be added in `src/index.css`.
+- Custom scrollbar styles are defined in `src/custom-scrollbar.css`.
+- The application is set up to work with a backend API. Ensure the backend is running and the `VITE_API_URL` is set correctly.
+
+For more detailed information on the implementation, please refer to the source code and comments within each file.
