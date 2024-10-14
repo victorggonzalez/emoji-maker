@@ -26,3 +26,6 @@ dist-ssr
 *.env.local
 *.vite
 .vercel
+
+/frontend/requirements/*
+/backend/requirements/*
