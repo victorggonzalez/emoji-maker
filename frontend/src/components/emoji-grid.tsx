@@ -56,7 +56,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   );
 
   useEffect(() => {
-    fetchEmojis();
+    fetchEmojis(true);
   }, [fetchEmojis, shouldRefetch]);
 
   const handleRefresh = () => {
@@ -225,12 +225,6 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
       {/* Header with refresh button */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Your Emoji Collection
-          </h2>
-          <p className="text-gray-600 mt-1">
-            {emojis.length} magical {emojis.length === 1 ? "emoji" : "emojis"}
-          </p>
         </div>
         <Button
           onClick={handleRefresh}

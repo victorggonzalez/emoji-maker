@@ -21,6 +21,7 @@ export function EmojiCard({
   onDelete,
 }: EmojiCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const isProduction = import.meta.env.MODE === "production";
@@ -141,12 +142,12 @@ export function EmojiCard({
 
           {/* Toggle details button */}
           <Button
-            onClick={() => setIsHovered(!isHovered)}
+            onClick={() => setExpanded(!expanded)}
             variant="ghost"
             size="sm"
             className="h-8 px-3 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200"
           >
-            {isHovered ? (
+            {expanded ? (
               <>
                 <EyeOff className="h-3 w-3 mr-1" />
                 Hide
@@ -163,7 +164,7 @@ export function EmojiCard({
         {/* Prompt (expanded state) */}
         <div
           className={`transition-all duration-300 overflow-hidden ${
-            isHovered ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
+            expanded ? "max-h-32 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
