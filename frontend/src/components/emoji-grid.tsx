@@ -221,11 +221,9 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Header with refresh button */}
-      <div className="flex items-center justify-between">
-        <div>
-        </div>
+      <div className="flex flex-row-reverse">
         <Button
           onClick={handleRefresh}
           disabled={isRefreshing}
@@ -241,7 +239,7 @@ export function EmojiGrid({ shouldRefetch }: EmojiGridProps) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 overflow-x-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 overflow-x-hidden p-8">
         {emojis.map((emoji) => (
           <EmojiCard
             key={emoji.id}
