@@ -6,6 +6,7 @@ import { EmojiForm } from "./components/emoji-form";
 import { API_URL } from "./config";
 import "./App.css";
 import "./custom-scrollbar.css";
+import SignedOutContent from "./views/landing/signed-out-content";
 
 interface UserProfile {
   user_id: string;
@@ -23,19 +24,19 @@ function App() {
       try {
         const token = await getToken();
         const response = await fetch(`${API_URL}/api/initialize-user`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch user profile');
+          throw new Error("Failed to fetch user profile");
         }
         const data = await response.json();
         setUserProfile(data.profile);
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error("Error fetching user profile:", error);
       }
     }
   }, [isSignedIn, getToken]);
@@ -45,7 +46,7 @@ function App() {
   }, [fetchUserProfile]);
 
   const handleEmojiGenerated = () => {
-    setShouldRefetchEmojis(prev => !prev);
+    setShouldRefetchEmojis((prev) => !prev);
     fetchUserProfile();
   };
 
@@ -56,17 +57,17 @@ function App() {
         <div className="container mx-auto px-2 sm:px-4 flex flex-col h-full max-w-7xl">
           <SignedIn>
             <div className="mb-4 sticky top-24 sm:top-28 bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100 z-10 pb-4 pt-2">
-              <EmojiForm onEmojiGenerated={handleEmojiGenerated} userProfile={userProfile} />
+              <EmojiForm
+                onEmojiGenerated={handleEmojiGenerated}
+                userProfile={userProfile}
+              />
             </div>
             <div className="flex-grow overflow-auto custom-scrollbar">
               <EmojiGrid shouldRefetch={shouldRefetchEmojis} />
             </div>
           </SignedIn>
           <SignedOut>
-            <div className="text-center bg-white bg-opacity-80 p-4 sm:p-8 rounded-lg shadow-md mt-4">
-              <p className="text-lg sm:text-xl mb-4 text-purple-600">Welcome to Emoj maker!</p>
-              <p className="text-sm sm:text-base text-gray-600">Sign in to start creating and interacting with emojis.</p>
-            </div>
+            <SignedOutContent />
           </SignedOut>
         </div>
       </main>

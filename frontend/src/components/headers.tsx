@@ -1,9 +1,7 @@
 import { useState } from "react";
 import {
   SignedIn,
-  SignedOut,
   UserButton,
-  SignInButton,
 } from "@clerk/clerk-react";
 import { Button } from "./ui/button";
 import { X, Menu, Sparkles } from "lucide-react";
@@ -33,16 +31,6 @@ export default function Header({ userProfile }: HeaderProps) {
             <Sparkles className="mr-2 h-5 w-5 sm:h-6 sm:w-6" /> AI Emoji maker
           </h2>
           <div className="flex items-center space-x-4">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button
-                  variant="secondary"
-                  className="bg-white text-purple-600 hover:bg-purple-100"
-                >
-                  Sign In
-                </Button>
-              </SignInButton>
-            </SignedOut>
             <SignedIn>
               {userProfile && (
                 <span className="bg-white text-purple-600 px-3 py-1 rounded-full font-semibold whitespace-nowrap">
