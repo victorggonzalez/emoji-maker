@@ -70,7 +70,7 @@ const SignedOutContent = () => {
                   className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <span className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></span>
-                  <span className="relative">Sign in to start creating</span>
+                  <span className="relative">Sign In To Start Creating</span>
                 </Button>
               </SignInButton>
 
